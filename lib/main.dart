@@ -22,13 +22,42 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class _MyHomePageState extends State<MyHomePage> 
+  with SingleTickerProviderStateMixin {
+
+  Animation<double> animation;
+  AnimationController controller;
+
   int numTaps = 0;
   int numDoubleTaps = 0;
   int numLongPress = 0;
   double posX = 0.0;
   double posY = 0.0;
-  double boxSize = 150.0;
+  double boxSize = 0.0;
+  final double fullBoxSize = 150.0;
+
+  @override
+  void initState() {
+    super.initState();
+    // This is the animation controller
+    controller = AnimationController(
+      duration: const Duration(milliseconds: 5000),
+      vsync: this,
+    );
+    // Here is the curved animation for effects
+    animation = CurvedAnimation(
+      parent: controller,
+      curve: Curves.easeInOut,
+    );
+    // Adding the listener
+    animation.addListener(() {
+      setState(() {
+        boxSize = fullBoxSize * animation.value;
+      });
+      center(context);
+    });
+    controller.forward();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +84,23 @@ class _MyHomePageState extends State<MyHomePage> {
             numLongPress++;
           });
         },
+
+        // To drag the square vertically use the onVerticalDragUpdate widget
+        onVerticalDragUpdate: (DragUpdateDetails value) {
+          setState(() {
+            double delta = value.delta.dy;
+            posY+= delta;
+          });
+        },
+
+        //To drag the square horizontally use the onHorizontalDragUpdate widget
+        onHorizontalDragUpdate: (DragUpdateDetails value) {
+          setState(() {
+            double delta = value.delta.dx;
+            posX+= delta;
+          });
+        },
+
         child: Stack(
           children: <Widget>[
             Positioned(
@@ -81,6 +127,12 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
     );
+  }
+
+  @override
+  dispose(){
+    controller.dispose();
+    super.dispose();
   }
 
   void center(BuildContext context) {
